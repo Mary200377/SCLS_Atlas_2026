@@ -1,6 +1,5 @@
 # ============================================================================
 # SCLC scRNA-seq Analysis Pipeline (16 samples)
-# Адаптировано из Practice2.R для мульти-образцового анализа
 # ============================================================================
 
 # Загрузка необходимых библиотек
@@ -57,13 +56,10 @@ for (sample in sample_ids) {
   seurat_list[[sample]]$batch <- sample
 }
 
-cat("\n✅ Загружено", length(seurat_list), "образцов\n")
 
 # ============================================================================
 # 1. КОНТРОЛЬ КАЧЕСТВА (QC) И ФИЛЬТРАЦИЯ
 # ============================================================================
-
-cat("\n=== КОНТРОЛЬ КАЧЕСТВА ===\n")
 
 # Расчет метрик QC для каждого образца
 for (i in 1:length(seurat_list)) {
@@ -101,8 +97,6 @@ for (i in 1:length(seurat_list)) {
 # 2. ИНТЕГРАЦИЯ ДАННЫХ (Harmony)
 # ============================================================================
 
-cat("\n=== ИНТЕГРАЦИЯ ДАННЫХ ===\n")
-
 # Объединение всех образцов в один объект
 sclc_merged <- merge(
   seurat_list[[1]],
@@ -133,13 +127,10 @@ sclc_merged <- RunHarmony(sclc_merged, group.by.vars = "batch", assay.use = "RNA
 
 # Сохранение интегрированных данных
 saveRDS(sclc_merged, file = "./results/sclc_merged_harmony.rds")
-cat("✅ Данные интегрированы и сохранены\n")
 
 # ============================================================================
 # 3. КЛАСТЕРИЗАЦИЯ И UMAP НА ИНТЕГРИРОВАННЫХ ДАННЫХ
 # ============================================================================
-
-cat("\n=== КЛАСТЕРИЗАЦИЯ И UMAP ===\n")
 
 # Построение графа соседей на интегрированных данных (Harmony embeddings)
 sclc_merged <- FindNeighbors(sclc_merged, reduction = "harmony", dims = 1:30)
@@ -165,8 +156,6 @@ cat("Найдено кластеров:", length(unique(sclc_merged$RNA_clusters
 # ============================================================================
 # 4. SCTransform PIPELINE (Альтернативный подход)
 # ============================================================================
-
-cat("\n=== SCTransform PIPELINE ===\n")
 
 # SCTransform для каждого образца отдельно
 sclc_list_sct <- list()
@@ -225,8 +214,6 @@ saveRDS(sclc_sct_integrated, file = "./results/sclc_sct_integrated.rds")
 # 5. АННОТАЦИЯ КЛЕТОЧНЫХ ТИПОВ
 # ============================================================================
 
-cat("\n=== АННОТАЦИЯ КЛЕТОЧНЫХ ТИПОВ ===\n")
-
 # Маркеры клеточных типов
 cell_markers <- list(
   T_cells = c("CD3D", "CD3E", "CD3G", "CD8A", "CD4"),
@@ -266,8 +253,6 @@ dev.off()
 # 6. АНАЛИЗ СУБТИПОВ SCLC
 # ============================================================================
 
-cat("\n=== АНАЛИЗ СУБТИПОВ SCLC ===\n")
-
 # Фильтрация только эпителиальных/SCLC клеток
 epithelial_cells <- subset(sclc_merged, subset = EPCAM > 1)
 
@@ -295,8 +280,6 @@ saveRDS(epithelial_cells, file = "./results/sclc_epithelial.rds")
 # 7. СОХРАНЕНИЕ РЕЗУЛЬТАТОВ
 # ============================================================================
 
-cat("\n=== СОХРАНЕНИЕ РЕЗУЛЬТАТОВ ===\n")
-
 # Метаданные всех клеток
 metadata <- sclc_merged@meta.data
 write.csv(metadata, file = "./results/cell_metadata.csv")
@@ -308,14 +291,9 @@ cluster_info <- data.frame(
 )
 write.csv(cluster_info, file = "./results/cluster_info.csv")
 
-cat("✅ Все результаты сохранены в ./results/\n")
-cat("✅ Визуализации сохранены в ./figures/\n")
-
 # ============================================================================
-# ДОПОЛНИТЕЛЬНО: Cell Cycle Scoring (из Practice2.R)
+# ДОПОЛНИТЕЛЬНО: Cell Cycle Scoring
 # ============================================================================
-
-cat("\n=== CELL CYCLE SCORING ===\n")
 
 # Гены клеточного цикла
 s.genes <- cc.genes$s.genes
@@ -339,5 +317,3 @@ p8 <- DimPlot(sclc_merged, reduction = "umap_harmony", group.by = "Phase", pt.si
 png("./figures/07_cell_cycle.png", width = 16, height = 8, units = "in", res = 300)
 print(p7 + p8)
 dev.off()
-
-cat("\n🎉 Анализ завершен!\n")

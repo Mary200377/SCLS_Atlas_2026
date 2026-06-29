@@ -21,7 +21,6 @@ setwd("~/Magister_work/")
 # 1. ЗАГРУЗКА ДАННЫХ
 # ============================================================================
 
-cat("=== ЗАГРУЗКА ДАННЫХ ===\n")
 epithelial_cells <- readRDS("./results/sclc_epithelial.rds")
 
 cat("Клеток:", ncol(epithelial_cells), "\n")
@@ -31,8 +30,6 @@ cat("Кластеров SCLC:", length(unique(epithelial_cells$SCLC_clusters)), 
 # ============================================================================
 # 2. РАСЧЕТ СКОРОВ ДЛЯ СУБТИПОВ SCLC
 # ============================================================================
-
-cat("\n=== РАСЧЕТ СКОРОВ СУБТИПОВ SCLC ===\n")
 
 # Переключаемся на SCT assay (где хранятся нормализованные данные)
 DefaultAssay(epithelial_cells) <- "SCT"
@@ -58,7 +55,7 @@ for (subtype in names(sclc_subtype_markers)) {
     cat(sprintf("  %s: %d/%d генов найдено\n", subtype, length(found), 
                 length(sclc_subtype_markers[[subtype]])))
   } else {
-    cat(sprintf("  ⚠️ %s: гены не найдены\n", subtype))
+    cat(sprintf(" %s: гены не найдены\n", subtype))
   }
 }
 
@@ -70,14 +67,12 @@ for (subtype in names(found_markers)) {
     name = paste0(subtype, "_score"),
     ctrl = 50  # количество контрольных генов
   )
-  cat(sprintf("  ✅ Скор %s рассчитан\n", subtype))
+  cat(sprintf(" Скор %s рассчитан\n", subtype))
 }
 
 # ============================================================================
 # 3. АННОТАЦИЯ КЛАСТЕРОВ
 # ============================================================================
-
-cat("\n=== АННОТАЦИЯ КЛАСТЕРОВ ===\n")
 
 # Для каждого кластера определяем доминирующий субтип
 cluster_annotations <- data.frame(
@@ -115,7 +110,6 @@ epithelial_cells$SCLC_subtype <- cluster_annotations$dominant_subtype[
 # 4. ВИЗУАЛИЗАЦИЯ РЕЗУЛЬТАТОВ
 # ============================================================================
 
-cat("\n=== ВИЗУАЛИЗАЦИЯ ===\n")
 
 # UMAP по субтипам
 p_subtype <- DimPlot(epithelial_cells, group.by = "SCLC_subtype",
@@ -148,13 +142,11 @@ png("./figures/sclc_subtype_dotplot.png", width = 14, height = 10, units = "in",
 print(dotplot)
 dev.off()
 
-cat("✅ Визуализации сохранены в ./figures/\n")
 
 # ============================================================================
 # 5. СТАТИСТИКА ПО СУБТИПАМ
 # ============================================================================
 
-cat("\n=== СТАТИСТИКА ПО СУБТИПАМ ===\n")
 
 subtype_stats <- epithelial_cells@meta.data %>%
   group_by(SCLC_subtype) %>%
@@ -178,7 +170,6 @@ write.csv(cluster_stats, "./results/sclc_cluster_stats.csv", row.names = FALSE)
 # 6. ДОПОЛНИТЕЛЬНЫЙ АНАЛИЗ: EPCAM ЭКСПРЕССИЯ
 # ============================================================================
 
-cat("\n=== АНАЛИЗ EPCAM ЭКСПРЕССИИ ===\n")
 
 # Согласно Zhang et al. 2022, ASCL1+ клетки имеют высокую экспрессию EPCAM
 if ("EPCAM" %in% rownames(epithelial_cells)) {
@@ -200,14 +191,11 @@ if ("EPCAM" %in% rownames(epithelial_cells)) {
   print(p_epcam)
   dev.off()
   
-  cat("✅ Анализ EPCAM завершен\n")
 }
 
 # ============================================================================
 # 7. СОХРАНЕНИЕ АННОТИРОВАННОГО ОБЪЕКТА
 # ============================================================================
-
-cat("\n=== СОХРАНЕНИЕ РЕЗУЛЬТАТОВ ===\n")
 
 # Сохраняем аннотированный объект
 saveRDS(epithelial_cells, "./results/sclc_epithelial_annotated.rds")
@@ -220,13 +208,10 @@ write.csv(epithelial_cells@meta.data, "./results/sclc_epithelial_metadata.csv",
 write.csv(cluster_annotations, "./results/sclc_cluster_annotations.csv", 
           row.names = FALSE)
 
-cat("✅ Все результаты сохранены в ./results/\n")
-
 # ============================================================================
 # 8. ДОПОЛНИТЕЛЬНАЯ ВИЗУАЛИЗАЦИЯ: HEATMAP МАРКЕРОВ
 # ============================================================================
 
-cat("\n=== HEATMAP МАРКЕРОВ ===\n")
 
 # Выбираем топ маркеры для каждого субтипа
 top_markers <- list()
@@ -244,7 +229,3 @@ heatmap <- DoHeatmap(epithelial_cells,
 png("./figures/sclc_subtype_heatmap.png", width = 10, height = 12, units = "in", res = 300)
 print(heatmap)
 dev.off()
-
-cat("✅ Heatmap сохранен\n")
-
-cat("\n🎉 Аннотация клеточных типов завершена!\n")
